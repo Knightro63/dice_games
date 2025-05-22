@@ -25,12 +25,12 @@ analysis_options.yaml
 .settings/
 .vscode/*
 
-*/macos
-*/web
-*/ios
-*/android
-*/linux
-*/windows
+macos/
+web/
+ios/
+android/
+linux/
+windows/
 
 # Flutter repo-specific
 /bin/cache/

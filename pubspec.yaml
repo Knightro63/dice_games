@@ -24,7 +24,7 @@ dev_dependencies:
 
 dependency_overrides:
   three_js_core:
-    path: ../three_js/packages/three_js_core
+    path: ../../development/three_js/packages/three_js_core
 
 flutter:
   uses-material-design: true
