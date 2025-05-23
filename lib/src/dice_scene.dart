@@ -128,7 +128,13 @@ class _State extends State<DiceScene> {
                     }
                     else{
                       setState(() {
-                        widget.callback[Callbacks.computerSetSelected]?.call(selectedGame.getDiceValues(selectedGame.selected));
+                        List<int> left = [];
+                        for(int i = 0; i < visuals.length;i++){
+                          if(visuals[i].visible){
+                            left.add(i);
+                          }
+                        }
+                        widget.callback[Callbacks.computerSetSelected]?.call(selectedGame.getDiceValues(left));
                         reset();
                       });
                     }

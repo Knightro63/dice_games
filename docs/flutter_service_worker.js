@@ -3,11 +3,11 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "b76c51b0d35a24633ec83be2820b15a8",
+const RESOURCES = {"flutter_bootstrap.js": "224b13da1b85efccb29b916ca9a5473e",
 "version.json": "167d3373cd644510b0a07ba1cd5a38bc",
 "index.html": "7d45ff5927383e9f71bbcc474a5ffc56",
 "/": "7d45ff5927383e9f71bbcc474a5ffc56",
-"main.dart.js": "a41254f9efc15bedd3d1e4712dc92455",
+"main.dart.js": "7a18498eeca20f459bf0957b704e9c9b",
 "flutter.js": "76f08d47ff9f5715220992f993002504",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
@@ -30,7 +30,7 @@ const RESOURCES = {"flutter_bootstrap.js": "b76c51b0d35a24633ec83be2820b15a8",
 "assets/packages/three_js_controls/assets/joystick_knob.png": "bb0811554c35e7d74df6d80fb5ff5cd5",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
 "assets/AssetManifest.bin": "b964717ea1ed1b135890f2994b14f86f",
-"assets/fonts/MaterialIcons-Regular.otf": "026167543fc8294ab10fba79b4d686a5",
+"assets/fonts/MaterialIcons-Regular.otf": "aa1f24c83f096af27d9234ee80d76483",
 "assets/assets/dice_highres_red.glb": "c8621ba3d8e23510bc2825dd85fcc39a",
 "canvaskit/skwasm_st.js": "d1326ceef381ad382ab492ba5d96f04d",
 "canvaskit/skwasm.js": "f2ad9363618c5f62e813740099a80e63",

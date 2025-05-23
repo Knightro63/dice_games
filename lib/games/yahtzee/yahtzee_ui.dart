@@ -15,7 +15,7 @@ class YahtzeeGame extends StatefulWidget {
 }
 
 class _MultiPlayerGameState extends State<YahtzeeGame> {
-  final List<int> points = List.filled(14, 0);
+  final List<int?> points = List.filled(14, null);
   int get totalPoints => getTotal();
 
   List<int> selected = [];
@@ -46,7 +46,7 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
     if (points.isEmpty) return 0; // return -99999999;
     int total = 0;
     for (int i = 1; i < points.length; ++i) {
-      total += points[i];
+      total += points[i]??0;
     }
     return total;
   }
@@ -75,7 +75,7 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
       context: context, 
       builder: (BuildContext context){
         return EndGameModal(
-          points: points, 
+          points: [],//points, 
           players: [],
           reset: (){
             resetGame();
@@ -110,18 +110,18 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
         k2++;
       }
       else if(kind[i] == 3){
-        k3+=i+1;
+        k3 = (i+1)*3;
       }
       else if(kind[i] == 4){
-        k4+=i+1;
+        k4 = (i+1)*4;
       }
       else if(kind[i] == 5){
-        k5+=i+1;
+        k5 = (i+1)*5;
       }
     }
 
     if(k5 != 0 && points[i] != 0){
-      points[13] += 100;
+      points[13] = 100+(points[13] ?? 0);
     }
 
     switch (i) {
@@ -131,41 +131,56 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
       case 3:
       case 4:
       case 5:
-        if(points[i] == 0){
+        if(points[i] == null){
           for(int j = 0; j < selected.length;j++){
             if(selected[j] == i+1){
-              points[i] += i+1;
+              points[i] = (points[i] ?? 0)+i+1;
             }
+          }
+          if(points[i] == null){
+            points[i] = 0;
           }
           return true;
         }
         break;
       case 6:
-        if(k3 != 0 && points[i] == 0){
+        if(k3 != 0 && points[i] == null){
           points[i] = k3;
           return true;
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       case 7:
-        if(k4 != 0 && points[i] == 0){
+        if(k4 != 0 && points[i] == null){
           points[i] = k4;
           return true;
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       case 11:
-        if(k5 != 0 && points[i] == 0){
+        if(k5 != 0 && points[i] == null){
           points[i] = 50;
           return true;
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       case 8:
-        if(k2 != 0 && k3 != 0 && points[i] == 0){
+        if(k2 != 0 && k3 != 0 && points[i] == null){
           points[i] = 25;
           return true;
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       case 9:
-        if(points[i] == 0){
+        if(points[i] == null){
           if(kind[0] == 1 && kind[0] == 1 && kind[2] == 1 && kind[3] == 1 && kind[4] == 1){
             points[i] = 4+3+2+1;
             return true;
@@ -175,21 +190,30 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
             return true;
           }
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       case 10:
-        if(kind[0] == 1 && kind[0] == 1 && kind[2] == 1 && kind[3] == 1 && kind[4] == 1 && kind[5] == 1 && points[i] == 0){
+        if(kind[0] == 1 && kind[0] == 1 && kind[2] == 1 && kind[3] == 1 && kind[4] == 1 && kind[5] == 1 && points[i] == null){
           points[i] = 5+4+3+2+1;
           return true;
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       case 12:
-        if(points[i] == 0){
+        if(points[i] == null){
           for(int j = 0; j < selected.length;j++){
-            points[i] += i+1;
+            points[i] = i+1+(points[i]??0);
           }
           return true;
         }
-        break;
+        else{
+          points[i] = 0;
+          return true;
+        }
       default:
     }
 
@@ -217,7 +241,7 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
           ),
         ),
         InkWell(
-          onTap: points[i] == 0?(){
+          onTap: points[i] == null?(){
             setState(() {
               bool didDis = recalculate(i);
               if(didDis){
@@ -235,7 +259,7 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
                 width: 2
               )
             ),
-            child: points[i] != 0?Text(
+            child: points[i] != null?Text(
               points[i].toString(),
               textAlign: TextAlign.right,
               style: Theme.of(context).primaryTextTheme.bodyMedium,
@@ -350,8 +374,27 @@ class _MultiPlayerGameState extends State<YahtzeeGame> {
         SizedBox(
           width: MediaQuery.of(context).size.width,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Container(
+                height: 50,
+                //width: 209,
+                alignment: Alignment.center,
+                padding: EdgeInsets.only(left: 5),
+                margin: EdgeInsets.fromLTRB(20,20,20,0),
+                // decoration: BoxDecoration(
+                //   color: Theme.of(context).cardColor,
+                //   border: Border.all(
+                //     color: Theme.of(context).dividerColor,
+                //     width: 2
+                //   )
+                // ),
+                child: Text(
+                  'Score: ${totalPoints.toString()}',
+                  textAlign: TextAlign.right,
+                  style: Theme.of(context).primaryTextTheme.headlineLarge,
+                )
+              ),
               Container(
                 height: 50,
                 width: 209,
