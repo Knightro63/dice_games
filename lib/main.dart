@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import './games/farkel/multiplayer.dart';
+import './games/farkle/multiplayer.dart';
 import './src/dice_scene.dart';
 import './src/enums.dart';
 import 'package:flutter/foundation.dart';

@@ -81,7 +81,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
     if(currentCell == null && currentPlayer == null) return;
     setState(() {
       if(value == 0 || value == null){
-        cells[currentPlayer!][currentCell!].text = 'FARKEL';
+        cells[currentPlayer!][currentCell!].text = 'FARKLE';
       }
       else{
         cells[currentPlayer!][currentCell!].text = value.toString();
@@ -165,7 +165,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
   void recalculate(int i, bool last){
     int newPoint = 0;
     for(int j = 0; j < cells[i].length; j++){
-      if(cells[i][j].text != '' && cells[i][j].text != 'FARKEL'){
+      if(cells[i][j].text != '' && cells[i][j].text != 'FARKLE'){
         newPoint += int.parse(cells[i][j].text);
       }
     }
@@ -214,7 +214,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
               onChanged: (String value){
                 setState(() {
                   if(value == '0'){
-                    cells[i][j].text = 'FARKEL';
+                    cells[i][j].text = 'FARKLE';
                   }
                   else if(value != ''){
                     recalculate(i,totalPlayers.length-1 == i && j == cells[i].length-1);

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import '../games/game.dart';
 import './enums.dart';
-import '../../games/farkel/farkel.dart';
+import '../../games/farkle/farkle.dart';
 import 'package:flutter/material.dart';
 import 'package:three_js/three_js.dart' as three;
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
@@ -46,7 +46,7 @@ class _State extends State<DiceScene> {
   
   String? player;
   bool didRollStart = false;
-  GameType type = GameType.farkel;
+  GameType type = GameType.farkle;
   PlayerType playerType = PlayerType.multi;
 
   @override
@@ -331,11 +331,11 @@ class _State extends State<DiceScene> {
   }
 
   void setupGame(){
-    if(GameType.farkel == type){
-      selectedGame = Farkel(threeJs,visuals,helpers,dices,updateScore);
+    if(GameType.farkle == type){
+      selectedGame = Farkle(threeJs,visuals,helpers,dices,updateScore);
     }
     else if(GameType.yatzee == type){
-      selectedGame = Farkel(threeJs,visuals,helpers,dices,updateScore);
+      selectedGame = Farkle(threeJs,visuals,helpers,dices,updateScore);
     }
   }
 
