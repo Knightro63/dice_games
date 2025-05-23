@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import '../games/game.dart';
 import './enums.dart';
-import '../../games/farkel/farkel.dart';
+import '../games/farkle/farkle.dart';
 import 'package:flutter/material.dart';
 import 'package:three_js/three_js.dart' as three;
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
@@ -12,7 +12,6 @@ extension Quant on Quaternion{
   three.Quaternion toQuaternion(){
     return three.Quaternion(x,y,z,w);
   }
-
 }
 extension Vec3 on Vector3{
   three.Vector3 toVector3(){
@@ -183,7 +182,7 @@ class _State extends State<DiceScene> {
             ],
           )
         ),
-        if(visible) Align(
+        if(visible && !isNPC) Align(
           alignment: Alignment.bottomRight,
           child: Container(
             margin: EdgeInsets.all(20),
@@ -209,7 +208,6 @@ class _State extends State<DiceScene> {
         )
       ],
     );
-      
   }
 
   late final oimo.World world;
@@ -221,8 +219,11 @@ class _State extends State<DiceScene> {
     visible = true;
     isNPC = true;
     final ai = selectedGame.loop();
-
-    if(ai != null){
+    print(ai);
+    if(!didRollStart && ai == null){
+      reRoll();
+    }
+    else if(ai != null){
       if(ai.move == PlayerMove.roll){
         final points = ai.points;
         currentScore += points;
@@ -288,7 +289,6 @@ class _State extends State<DiceScene> {
 
     didRollStart = true;
     selectedGame.selected.clear();
-    threeJs.visible = true;
 
     int j = 0;
     visuals.forEach((model){
@@ -406,7 +406,7 @@ class _State extends State<DiceScene> {
       position: Vector3(0, -0.5, 0),
       orientation: Quaternion.euler(0,0,0),
     ));
-    createWalls(false);
+    createWalls();
     final diceCount = 6;
     for (int i = 0; i < diceCount; i++) {
       final position = getRandomPosition();
@@ -414,16 +414,16 @@ class _State extends State<DiceScene> {
     }
   }
 
-  void createWalls(bool visible){
+  void createWalls(){
     final vFOV = threeJs.camera.fov * math.pi / 180;        // convert vertical fov to radians
     final height = 2 * math.tan( vFOV / 2 ) * 30; // visible height
     final width = height * threeJs.camera.aspect;
     for(int i = 0; i < 4; i++){
-      final boxGeometry = three.BoxGeometry(i<2?width:height, 15,1);
+      final boxGeometry = three.BoxGeometry(i<2?width:height, 30,1);
       final boxMaterial = three.MeshStandardMaterial.fromMap({ 
         'color': 0xe9e464,
         'side': three.DoubleSide,
-        'visible': visible
+        'visible': false
       });
 
       final box = three.Mesh(boxGeometry, boxMaterial);
@@ -440,7 +440,7 @@ class _State extends State<DiceScene> {
 
       final body = oimo.RigidBody(
         type: oimo.RigidBodyType.static,
-        shapes: [oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box),i<2?width:height, 15, 1)],
+        shapes: [oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box),i<2?width:height, 30, 1)],
         position: i < 2?Vector3(0, 0, i == 0?height/2-(50*hd):-height/2):Vector3(i == 2?width/2:-width/2, 0, 0),
         orientation: i < 2?Quaternion.euler(0,0,0):Quaternion.euler(-0.5 * math.pi,0,0),
       );
@@ -526,7 +526,7 @@ class _State extends State<DiceScene> {
       }
     }
 
-    selectedGame.allowSelect = allSleeping;
+    selectedGame.allowSelect = allSleeping && didRollStart;
   }
 
   void animate() {

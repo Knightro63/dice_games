@@ -26,7 +26,8 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
   int? winner;
   List<String> totalPlayers = ['name1','name2'];
   List<int> points = [0,0];
-  List<List<TextEditingController>> cells = [[TextEditingController()],[TextEditingController()]];
+  List<TextEditingController> texts = [TextEditingController(),TextEditingController()];
+  List<List<String>> cells = [[''],['']];
   FocusNode focus = FocusNode();
 
   int? currentPlayer;
@@ -43,10 +44,12 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
             setPlayers: (list){
               widget.diceScore[Callbacks.totalPlayers]?.call(list);
               widget.diceScore[Callbacks.playerType]?.call(widget.playerType);
+              widget.diceScore[Callbacks.allowDice]?.call(true);
               totalPlayers = list;
               for(int i = 2; i < list.length;i++){
                 points.add(0);
-                cells.add([TextEditingController()]);
+                cells.add(['']);
+                texts.add(TextEditingController());
               }
 
               setState(() {});
@@ -69,33 +72,37 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
   void dispose(){
     super.dispose();
     focus.dispose();
-
-    for(int i = 0; i < totalPlayers.length; i++){
-      for(int j = 0; j < cells[i].length;j++){
-        cells[i][j].dispose();
-      }
-    }
   }
 
   void computerSetScore([value]){
     if(currentCell == null && currentPlayer == null) return;
     setState(() {
       if(value == 0 || value == null){
-        cells[currentPlayer!][currentCell!].text = 'FARKEL';
+        texts[currentPlayer!].text = 'FARKEL';
+        cells[currentPlayer!][currentCell!] = 'FARKEL';
       }
       else{
-        cells[currentPlayer!][currentCell!].text = value.toString();
+        texts[currentPlayer!].text = value.toString();
+        cells[currentPlayer!][currentCell!] = value.toString();
         recalculate(currentPlayer!,totalPlayers.length-1 == currentPlayer! && currentCell! == cells[currentPlayer!].length-1);
       }
     });
-    if(totalPlayers.length-1 == currentPlayer && currentCell == cells[currentCell!].length-1){
-      if(isOver()){
-        endGame();
-      }
-      else if(cells[currentPlayer!][currentCell!].text != ''){
-        createCell();
+
+    bool all = true;
+    int j = cells.last.length-1;
+    for(int i = 0; i < texts.length; i++){
+      if(cells[i][j] == ''){
+        all = false;
       }
     }
+    
+    if(all && isOver()){
+      endGame();
+    }
+    else if(all){
+      createCell();
+    }
+
     currentCell = null;
     currentPlayer = null;
   }
@@ -106,10 +113,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
     for(int i = 0; i < totalPlayers.length; i++){
       shiftNames.add(totalPlayers[shift]);
       points[i] = 0;
-      for(int j = 0; j < cells[i].length;j++){
-        cells[i][j].dispose();
-      }
-      cells[i] = [TextEditingController()];
+      cells[i] = [''];
 
       if(shift+1 < totalPlayers.length){
         shift++;
@@ -147,7 +151,8 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
 
   void createCell(){
     for(int i = 0; i < cells.length; i++){
-      cells[i].add(TextEditingController());
+      cells[i].add('');
+      texts[i].text = '';
     }
     setState((){});
   }
@@ -165,8 +170,8 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
   void recalculate(int i, bool last){
     int newPoint = 0;
     for(int j = 0; j < cells[i].length; j++){
-      if(cells[i][j].text != '' && cells[i][j].text != 'FARKEL'){
-        newPoint += int.parse(cells[i][j].text);
+      if(cells[i][j] != '' && cells[i][j] != 'FARKEL'){
+        newPoint += int.parse(cells[i][j]);
       }
     }
 
@@ -205,7 +210,52 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
         )
       );
       for(int j = 0; j < cells[i].length; j++){
-        columns.add(
+        if(i != 0 && j == cells[i].length-1 && widget.playerType == PlayerType.single) columns.add(
+          InkWell(
+            onTap: (){
+              widget.nameChange?.call(totalPlayers[i]);
+              currentPlayer = i;
+              currentCell = j;
+            },
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width/totalPlayers.length,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                width: MediaQuery.of(context).size.width/totalPlayers.length,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor,
+                    width: 2
+                  )
+                ),
+                child: Text(
+                  cells[i][j] == ''?'ROLL':cells[i][j],
+                  style: Theme.of(context).primaryTextTheme.bodyMedium,
+                ),
+              )
+            )
+          )
+        );
+        else if(cells[i][j] != '' && j != cells[i].length-1) columns.add(
+          SizedBox(
+            width: MediaQuery.of(context).size.width/totalPlayers.length,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+              width: MediaQuery.of(context).size.width/totalPlayers.length,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Theme.of(context).dividerColor,
+                  width: 2
+                )
+              ),
+              child: Text(
+                cells[i][j],
+                style: Theme.of(context).primaryTextTheme.bodyMedium,
+              ),
+            )
+          )
+        );
+        else columns.add(
           SizedBox(
             width: MediaQuery.of(context).size.width/totalPlayers.length,
             child: TextField(
@@ -214,9 +264,11 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
               onChanged: (String value){
                 setState(() {
                   if(value == '0'){
-                    cells[i][j].text = 'FARKEL';
+                    cells[i][j] = 'FARKEL';
+                    texts[i].text = 'FARKEL';
                   }
                   else if(value != ''){
+                    cells[i][j] = value;
                     recalculate(i,totalPlayers.length-1 == i && j == cells[i].length-1);
                   }
                 });
@@ -227,16 +279,21 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
                 currentCell = j;
               },
               onTapOutside: (v){
-                if(totalPlayers.length-1 == i && j == cells[i].length-1){
-                  if(isOver()){
-                    endGame();
-                  }
-                  else if(cells[i][j].text != ''){
-                    createCell();
+                bool all = true;
+                for(int i = 0; i < texts.length; i++){
+                  if(texts[i].text == ''){
+                    all = false;
                   }
                 }
+                
+                if(all && isOver()){
+                  endGame();
+                }
+                else if(all){
+                  createCell();
+                }
               },
-              controller: cells[i][j],
+              controller: texts[i],
               style: Theme.of(context).primaryTextTheme.bodyMedium,
               inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.digitsOnly

@@ -14,13 +14,11 @@ class Farkel extends Game{
 
   List<int> getAllowedDie(){
     List<int> al = [];
-
     for(int i = 0; i < helpers.length;i++){
       if(visuals[i].visible){
         al.add(i);
       }
     }
-
     return al;
   }
 
@@ -28,9 +26,10 @@ class Farkel extends Game{
   AIScoring? loop(){
     if(!allowSelect) return null;
     final die = getAllowedDie();
+    print(die);
     final gs = rules(getDiceValues(die));
 
-    if(gs.playable == 6 || die.length - gs.playable == 0){
+    if(gs.points != 0 && (gs.playable == 6 || die.length - gs.playable == 0)){
       return AIScoring(PlayerMove.roll,gs.points,gs.playable);
     }
     else if(gs.points == 0 || die.length <= 2){
