@@ -1,8 +1,8 @@
 import '../game.dart';
 import '../../../src/enums.dart';
 
-class Farkel extends Game{
-  Farkel(
+class Farkle extends Game{
+  Farkle(
     super.threeJs,
     super.visuals,
     super.helpers,
