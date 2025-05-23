@@ -34,7 +34,7 @@ class AIScoring{
 class Game {
   bool allowSelect = false;
 
-  int maxDice = 6;
+  late int maxDice;
   final three.ThreeJS threeJs;
   final three.Raycaster raycaster = three.Raycaster();
   final three.Vector2 mousePosition = three.Vector2.zero();

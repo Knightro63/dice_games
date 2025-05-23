@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:dice_games/games/yahtzee/yahtzee.dart';
+
 import '../games/game.dart';
 import './enums.dart';
 import '../games/farkle/farkle.dart';
@@ -25,7 +27,7 @@ class DiceScene extends StatefulWidget {
     required this.callback,
   });
 
-  final Map<Callbacks,void Function(dynamic)> callback;
+  final Map<Callbacks,void Function([dynamic])> callback;
 
   @override
   createState() => _State();
@@ -33,7 +35,7 @@ class DiceScene extends StatefulWidget {
 
 class _State extends State<DiceScene> {
   late final three.ThreeJS threeJs;
-  late final Game selectedGame;
+  late Game selectedGame;
 
   int currentScore = 0;
   List<String> totalPlayers = ['name1','name2'];
@@ -45,8 +47,10 @@ class _State extends State<DiceScene> {
   
   String? player;
   bool didRollStart = false;
-  GameType type = GameType.farkel;
+  GameType type = GameType.farkle;
   PlayerType playerType = PlayerType.multi;
+
+  int numOfRolls = 0;
 
   @override
   void initState() {
@@ -112,14 +116,22 @@ class _State extends State<DiceScene> {
                 margin: EdgeInsets.all(20),
                 child: InkWell(
                   onTap: (){
-                    setState(() {
-                      currentScore += selectedGame.points;
-                      if(selectedGame.points == 0){
-                        currentScore = 0;
-                      }
-                      widget.callback[Callbacks.computerSetScore]?.call(currentScore);
-                      reset();
-                    });
+                    if(GameType.farkle == type){
+                      setState(() {
+                        currentScore += selectedGame.points;
+                        if(selectedGame.points == 0){
+                          currentScore = 0;
+                        }
+                        widget.callback[Callbacks.computerSetScore]?.call(currentScore);
+                        reset();
+                      });
+                    }
+                    else{
+                      setState(() {
+                        widget.callback[Callbacks.computerSetSelected]?.call(selectedGame.getDiceValues(selectedGame.selected));
+                        reset();
+                      });
+                    }
                   },
                   child: Container(
                     width: 110,
@@ -143,23 +155,36 @@ class _State extends State<DiceScene> {
                 margin: EdgeInsets.all(20),
                 child:InkWell(
                   onTap: (){
-                    setState(() {
-                      GameScoring gs = selectedGame.calculatePoints();
-                      int points = gs.points;
-                      currentScore += gs.points;
-                      prevSel += gs.playable;
+                    if(GameType.farkle == type){
+                      setState(() {
+                        GameScoring gs = selectedGame.calculatePoints();
+                        int points = gs.points;
+                        currentScore += gs.points;
+                        prevSel += gs.playable;
 
-                      if(prevSel < 6 && points != 0){
-                        reRoll(6-prevSel);
+                        if(prevSel < 6 && points != 0){
+                          reRoll(6-prevSel);
+                        }
+                        else if(prevSel == 6 && points != 0){
+                          prevSel = 0;
+                          reRoll();
+                        }
+                        else if(prevSel == 0 && points == 0 && !didRollStart){
+                          reRoll();
+                        }
+                      });
+                    }
+                    else if(numOfRolls < 3){
+                      widget.callback[Callbacks.computerSetSelected]?.call(selectedGame.getDiceValues(selectedGame.selected));
+                      prevSel += selectedGame.selected.length;
+                      if(prevSel < 5){
+                        reRoll(5-prevSel);
                       }
-                      else if(prevSel == 6 && points != 0){
-                        prevSel = 0;
+                      else if(prevSel == 0 && !didRollStart){
+                        widget.callback[Callbacks.computerSetSelected]?.call();
                         reRoll();
                       }
-                      else if(prevSel == 0 && points == 0 && !didRollStart){
-                        reRoll();
-                      }
-                    });
+                    }
                   },
                   child: Container(
                     width: 110,
@@ -189,6 +214,9 @@ class _State extends State<DiceScene> {
             child: InkWell(
               onTap: () {
                 setState(() {
+                  if(!threeJs.visible){
+                    widget.callback[Callbacks.unfocus]?.call();
+                  }
                   threeJs.visible = !threeJs.visible;
                 });
               },
@@ -205,7 +233,31 @@ class _State extends State<DiceScene> {
               ),
             ),
           )
-        )
+        ),
+        if(visible) Align(
+          alignment: Alignment.bottomLeft,
+          child: Container(
+            margin: EdgeInsets.all(20),
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  widget.callback[Callbacks.mainMenue]?.call();
+                });
+              },
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(45/2)
+                ),
+                child: Icon(
+                  Icons.exit_to_app_rounded
+                ),
+              ),
+            ),
+          )
+        ),
       ],
     );
   }
@@ -219,11 +271,12 @@ class _State extends State<DiceScene> {
     visible = true;
     isNPC = true;
     final ai = selectedGame.loop();
-    print(ai);
+    
     if(!didRollStart && ai == null){
       reRoll();
     }
     else if(ai != null){
+      print(ai);
       if(ai.move == PlayerMove.roll){
         final points = ai.points;
         currentScore += points;
@@ -255,6 +308,7 @@ class _State extends State<DiceScene> {
   }
 
   void reset(){
+    numOfRolls = 0;
     player = null;
     isNPC = false;
 
@@ -279,13 +333,17 @@ class _State extends State<DiceScene> {
   }
 
   void updateScore(){
-    setState(() {
-      tempScore = currentScore + selectedGame.points;
-    });
+    if(GameType.farkle == type){
+      setState(() {
+        tempScore = currentScore + selectedGame.points;
+      });
+    }
   }
 
   void reRoll([dynamic allow]){
     allow ??= selectedGame.maxDice;
+
+    print(allow);
 
     didRollStart = true;
     selectedGame.selected.clear();
@@ -316,6 +374,7 @@ class _State extends State<DiceScene> {
       i++;
     });
     threeJs.visible = true;
+    numOfRolls++;
     setState(() {});
   }
 
@@ -331,11 +390,11 @@ class _State extends State<DiceScene> {
   }
 
   void setupGame(){
-    if(GameType.farkel == type){
-      selectedGame = Farkel(threeJs,visuals,helpers,dices,updateScore);
+    if(GameType.farkle == type){
+      selectedGame = Farkle(threeJs,visuals,helpers,dices,updateScore);
     }
-    else if(GameType.yatzee == type){
-      selectedGame = Farkel(threeJs,visuals,helpers,dices,updateScore);
+    else if(GameType.yahtzee == type){
+      selectedGame = Yahtzee(threeJs,visuals,helpers,dices,updateScore);
     }
   }
 
@@ -385,6 +444,12 @@ class _State extends State<DiceScene> {
     widget.callback[Callbacks.playerType] = ([type]){
       setState(() {
         playerType = type;
+      });
+    };
+    widget.callback[Callbacks.gameType] = ([t]){
+      setState(() {
+        type = t;
+        setupGame();
       });
     };
     setupGame();

@@ -7,15 +7,11 @@ import 'package:flutter/services.dart';
 class MultiPlayerGame extends StatefulWidget {
   const MultiPlayerGame({
     super.key,
-    required this.callback,
     required this.diceScore,
-    required this.nameChange,
     required this.playerType
   });
 
-  final Function()? callback;
-  final Map<Callbacks,void Function(dynamic)> diceScore;
-  final Function(String)? nameChange;
+  final Map<Callbacks,void Function([dynamic])> diceScore;
   final PlayerType playerType;
 
   @override
@@ -28,7 +24,6 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
   List<int> points = [0,0];
   List<TextEditingController> texts = [TextEditingController(),TextEditingController()];
   List<List<String>> cells = [[''],['']];
-  FocusNode focus = FocusNode();
 
   int? currentPlayer;
   int? currentCell;
@@ -42,6 +37,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
         builder: (BuildContext context){
           return StartGameModal(
             setPlayers: (list){
+              widget.diceScore[Callbacks.gameType]?.call(GameType.farkle);
               widget.diceScore[Callbacks.totalPlayers]?.call(list);
               widget.diceScore[Callbacks.playerType]?.call(widget.playerType);
               widget.diceScore[Callbacks.allowDice]?.call(true);
@@ -66,20 +62,32 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
     else{
       widget.diceScore[Callbacks.computerSetScore] = computerSetScore;
     }
+
+    if(!widget.diceScore.containsKey(Callbacks.unfocus)){
+      widget.diceScore[Callbacks.unfocus] = unfocus;
+    }
+    else{
+      widget.diceScore[Callbacks.unfocus] = unfocus;
+    }
   }
 
   @override
   void dispose(){
     super.dispose();
-    focus.dispose();
+  }
+
+  void unfocus([value]){
+    setState(() {
+      primaryFocus!.unfocus();
+    });
   }
 
   void computerSetScore([value]){
     if(currentCell == null && currentPlayer == null) return;
     setState(() {
       if(value == 0 || value == null){
-        texts[currentPlayer!].text = 'FARKEL';
-        cells[currentPlayer!][currentCell!] = 'FARKEL';
+        texts[currentPlayer!].text = 'FARKLE';
+        cells[currentPlayer!][currentCell!] = 'FARKLE';
       }
       else{
         texts[currentPlayer!].text = value.toString();
@@ -141,7 +149,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
             Navigator.of(context).pop();
           },
           callback: (){
-            widget.callback?.call();
+            widget.diceScore[Callbacks.mainMenue]?.call();
             Navigator.of(context).pop();
           },
         );
@@ -170,7 +178,7 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
   void recalculate(int i, bool last){
     int newPoint = 0;
     for(int j = 0; j < cells[i].length; j++){
-      if(cells[i][j] != '' && cells[i][j] != 'FARKEL'){
+      if(cells[i][j] != '' && cells[i][j] != 'FARKLE'){
         newPoint += int.parse(cells[i][j]);
       }
     }
@@ -210,14 +218,37 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
         )
       );
       for(int j = 0; j < cells[i].length; j++){
-        if(i != 0 && j == cells[i].length-1 && widget.playerType == PlayerType.single) columns.add(
-          InkWell(
-            onTap: (){
-              widget.nameChange?.call(totalPlayers[i]);
-              currentPlayer = i;
-              currentCell = j;
-            },
-            child: SizedBox(
+        if(i != 0 && j == cells[i].length-1 && widget.playerType == PlayerType.single){ 
+          columns.add(
+            InkWell(
+              onTap: (){
+                widget.diceScore[Callbacks.changeName]?.call(totalPlayers[i]);
+                currentPlayer = i;
+                currentCell = j;
+              },
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width/totalPlayers.length,
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                  width: MediaQuery.of(context).size.width/totalPlayers.length,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor,
+                      width: 2
+                    )
+                  ),
+                  child: Text(
+                    cells[i][j] == ''?'ROLL':cells[i][j],
+                    style: Theme.of(context).primaryTextTheme.bodyMedium,
+                  ),
+                )
+              )
+            )
+          );
+        }
+        else if(cells[i][j] != '' && j != cells[i].length-1){ 
+          columns.add(
+            SizedBox(
               width: MediaQuery.of(context).size.width/totalPlayers.length,
               child: Container(
                 padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
@@ -229,92 +260,75 @@ class _MultiPlayerGameState extends State<MultiPlayerGame> {
                   )
                 ),
                 child: Text(
-                  cells[i][j] == ''?'ROLL':cells[i][j],
+                  cells[i][j],
                   style: Theme.of(context).primaryTextTheme.bodyMedium,
                 ),
               )
             )
-          )
-        );
-        else if(cells[i][j] != '' && j != cells[i].length-1) columns.add(
-          SizedBox(
-            width: MediaQuery.of(context).size.width/totalPlayers.length,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+          );
+        }
+        else {
+          columns.add(
+            SizedBox(
               width: MediaQuery.of(context).size.width/totalPlayers.length,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).dividerColor,
-                  width: 2
-                )
-              ),
-              child: Text(
-                cells[i][j],
+              child: TextField(
+                keyboardType: TextInputType.number,
+                autofocus: false,
+                onChanged: (String value){
+                  setState(() {
+                    if(value == '0'){
+                      cells[i][j] = 'FARKLE';
+                      texts[i].text = 'FARKLE';
+                    }
+                    else if(value != ''){
+                      cells[i][j] = value;
+                      recalculate(i,totalPlayers.length-1 == i && j == cells[i].length-1);
+                    }
+                  });
+                },
+                onTap: (){
+                  widget.diceScore[Callbacks.changeName]?.call(totalPlayers[i]);
+                  currentPlayer = i;
+                  currentCell = j;
+                },
+                onTapOutside: (v){
+                  bool all = true;
+                  for(int i = 0; i < texts.length; i++){
+                    if(texts[i].text == ''){
+                      all = false;
+                    }
+                  }
+                  
+                  if(all && isOver()){
+                    endGame();
+                  }
+                  else if(all){
+                    createCell();
+                  }
+                },
+                controller: texts[i],
                 style: Theme.of(context).primaryTextTheme.bodyMedium,
-              ),
-            )
-          )
-        );
-        else columns.add(
-          SizedBox(
-            width: MediaQuery.of(context).size.width/totalPlayers.length,
-            child: TextField(
-              keyboardType: TextInputType.number,
-              autofocus: false,
-              onChanged: (String value){
-                setState(() {
-                  if(value == '0'){
-                    cells[i][j] = 'FARKEL';
-                    texts[i].text = 'FARKEL';
-                  }
-                  else if(value != ''){
-                    cells[i][j] = value;
-                    recalculate(i,totalPlayers.length-1 == i && j == cells[i].length-1);
-                  }
-                });
-              },
-              onTap: (){
-                widget.nameChange?.call(totalPlayers[i]);
-                currentPlayer = i;
-                currentCell = j;
-              },
-              onTapOutside: (v){
-                bool all = true;
-                for(int i = 0; i < texts.length; i++){
-                  if(texts[i].text == ''){
-                    all = false;
-                  }
-                }
+                inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                ],
                 
-                if(all && isOver()){
-                  endGame();
-                }
-                else if(all){
-                  createCell();
-                }
-              },
-              controller: texts[i],
-              style: Theme.of(context).primaryTextTheme.bodyMedium,
-              inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
-              ],
-              
-              decoration: InputDecoration(
-                //labelText: label,
-                filled: true,
-                fillColor: Theme.of(context).canvasColor,
-                isDense: true,
-                contentPadding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
-                border: const OutlineInputBorder(
-                  borderSide: BorderSide(
-                    width: 4, 
-                    style: BorderStyle.solid,
+                decoration: InputDecoration(
+                  //labelText: label,
+                  filled: true,
+                  fillColor: Theme.of(context).canvasColor,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 4, 
+                      style: BorderStyle.solid,
+                    ),
                   ),
                 ),
-              ),
+              )
             )
-          )
-        );
+          );
+        }
       }
       
       columns.add(SizedBox(height: 100,));
