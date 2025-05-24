@@ -27,13 +27,15 @@ class _EndGameModalState extends State<EndGameModal> {
   void initState(){
     super.initState();
     int val = widget.points[0];
-    winner = widget.players[0];
-
+    
     order = widget.points.sublist(0);
 
-    for(int i = 1; i < widget.players.length; i++){
-      if(widget.points[i] > val){
-        winner = widget.players[i];
+    if(widget.players.isNotEmpty){
+      winner = widget.players[0];
+      for(int i = 1; i < widget.players.length; i++){
+        if(widget.points[i] > val){
+          winner = widget.players[i];
+        }
       }
     }
 
@@ -62,13 +64,13 @@ class _EndGameModalState extends State<EndGameModal> {
   Widget leaderBoard(){
     List<Widget> leaders = [];
 
-    for(int j = 0; j < widget.players.length; j++){
+    for(int j = 0; j < widget.points.length; j++){
       int i = checkPosition(order[j]);
       leaders.add(
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: widget.players.isEmpty?MainAxisAlignment.center:MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            if(widget.players.isNotEmpty) Text(
               widget.players[i].toUpperCase(),
               style: Theme.of(context).primaryTextTheme.bodyMedium,
             ),
@@ -88,13 +90,14 @@ class _EndGameModalState extends State<EndGameModal> {
 
   @override
   Widget build(BuildContext context) {
+    final s = CSS.responsive();
     return StatefulBuilder(builder: (context, setState) {
       return Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           padding: EdgeInsets.all(20),
-          width: CSS.responsive(),
-          height: CSS.responsive(),
+          width: s,
+          height: s,
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: const BorderRadius.all(Radius.circular(7)),
@@ -103,10 +106,16 @@ class _EndGameModalState extends State<EndGameModal> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "congratulations $winner you Won!".toUpperCase(),
+                widget.players.isEmpty?"Top scores!":"congratulations $winner you Won!".toUpperCase(),
                 style: Theme.of(context).primaryTextTheme.headlineLarge,
               ),
-              leaderBoard(),
+              Container(
+                height: s-150,
+                margin: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                padding: EdgeInsets.all(5),
+                color: Theme.of(context).canvasColor,
+                child: leaderBoard(),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [

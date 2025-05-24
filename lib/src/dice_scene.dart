@@ -348,9 +348,6 @@ class _State extends State<DiceScene> {
 
   void reRoll([dynamic allow]){
     allow ??= selectedGame.maxDice;
-
-    print(allow);
-
     didRollStart = true;
     selectedGame.selected.clear();
 
