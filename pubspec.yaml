@@ -16,7 +16,7 @@ dependencies:
   shared_preferences: ^2.5.3
   css:
     git:
-      url: https://github.com/LimbitlessSolutionsInc/css.git
+      url: https://github.com/knightro63/css.git
 
 dev_dependencies:
   flutter_test:
